@@ -3,6 +3,7 @@ Initializing the application
 """
 import os
 
+from cryptography.fernet import Fernet
 from flask import Flask
 from flask_httpauth import HTTPBasicAuth
 from flask_marshmallow import Marshmallow
@@ -14,6 +15,7 @@ db = SQLAlchemy()
 migrate = Migrate()
 basic_auth = HTTPBasicAuth()
 marshmallow = Marshmallow()
+fernet = None
 
 
 @basic_auth.verify_password
@@ -55,12 +57,16 @@ def init_app():
     Args: None
     Returns: object
     """
+    global fernet
+
     app = Flask(__name__)
     app.config['SQLALCHEMY_DATABASE_URI'] = get_database_url()
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
     db.init_app(app)
     migrate.init_app(app, db)
+    encryption_key = Fernet.generate_key()
+    fernet = Fernet(encryption_key)
 
     with app.app_context():
         # Include our Routes
